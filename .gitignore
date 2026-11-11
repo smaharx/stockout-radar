@@ -1,4 +1,4 @@
-﻿# Big data files (download the dataset separately, see README)
+# Big data files (download the dataset separately, see README)
 data/raw/*
 data/processed/*
 !data/raw/.gitkeep
@@ -22,3 +22,17 @@ venv/
 .DS_Store
 Thumbs.db
 .vscode/
+# Backend local secrets and databases — append these to the existing root .gitignore
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
+
+.vercel/
+
+*.tsbuildinfo

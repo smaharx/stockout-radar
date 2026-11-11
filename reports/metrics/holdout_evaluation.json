@@ -1,0 +1,152 @@
+{
+  "project": "Stockout Radar",
+  "evaluation_type": "retrospective held-out test evaluation",
+  "run_timestamp_utc": "2026-11-08T20:04:52.399444+00:00",
+  "model_artifact": "/run/media/shazia/SEM/CODES/stockout-radar/models/stockout_radar_v1.joblib",
+  "scikit_learn_version": "1.8.0",
+  "split": {
+    "train_start": "2010-02-01",
+    "train_end": "2011-04-25",
+    "validation_start": "2011-05-23",
+    "validation_end": "2011-08-01",
+    "test_start": "2011-08-29",
+    "test_end": "2011-11-07",
+    "embargo_weeks": 4
+  },
+  "test_products": 4484,
+  "selected_model_metrics": {
+    "observations": 48511,
+    "mae": 59.224596693246,
+    "rmse": 236.04926951307777,
+    "wape_percent": 47.73490193455546,
+    "total_actual_units": 6018750.0,
+    "total_absolute_error_units": 2873044.4101860565,
+    "total_predicted_units": 4720662.224173715,
+    "total_residual_actual_minus_predicted_units": 1298087.7758262842,
+    "net_forecast_bias_predicted_minus_actual_units": -1298087.7758262842,
+    "mean_residual_actual_minus_predicted_units": 26.75862744174072
+  },
+  "moving_average_baseline_metrics": {
+    "observations": 48511,
+    "mae": 66.10847024386221,
+    "rmse": 236.2271626448042,
+    "wape_percent": 53.28328971962617,
+    "total_actual_units": 6018750.0,
+    "total_absolute_error_units": 3206988.0,
+    "total_predicted_units": 5150090.0,
+    "total_residual_actual_minus_predicted_units": 868660.0,
+    "net_forecast_bias_predicted_minus_actual_units": -868660.0,
+    "mean_residual_actual_minus_predicted_units": 17.9064542062625
+  },
+  "mae_improvement_vs_baseline_units": 6.883873550616215,
+  "wape_improvement_vs_baseline_percentage_points": 5.548387785070709,
+  "product_diagnostics": {
+    "products_evaluated": 4484,
+    "products_model_better_by_mae": 1809,
+    "products_model_worse_or_equal_by_mae": 2675,
+    "largest_total_absolute_error_products": [
+      {
+        "StockCode": "23084",
+        "model_mae": 5760.326006925776,
+        "model_wape_percent": 92.1263555390214,
+        "model_total_absolute_error_units": 63363.586076183536
+      },
+      {
+        "StockCode": "22197",
+        "model_mae": 3850.9578344988145,
+        "model_wape_percent": 56.782038255659316,
+        "model_total_absolute_error_units": 42360.53617948696
+      },
+      {
+        "StockCode": "84077",
+        "model_mae": 2859.488825466938,
+        "model_wape_percent": 54.13554735579286,
+        "model_total_absolute_error_units": 31454.37708013632
+      },
+      {
+        "StockCode": "22086",
+        "model_mae": 2141.3252531117996,
+        "model_wape_percent": 53.23309027352602,
+        "model_total_absolute_error_units": 23554.577784229794
+      },
+      {
+        "StockCode": "22578",
+        "model_mae": 1903.8295871782016,
+        "model_wape_percent": 68.68297352976359,
+        "model_total_absolute_error_units": 20942.125458960218
+      },
+      {
+        "StockCode": "22577",
+        "model_mae": 1892.4209577259032,
+        "model_wape_percent": 65.32962131240565,
+        "model_total_absolute_error_units": 20816.630534984935
+      },
+      {
+        "StockCode": "85099B",
+        "model_mae": 1888.3052986790192,
+        "model_wape_percent": 37.05201263908172,
+        "model_total_absolute_error_units": 20771.35828546921
+      },
+      {
+        "StockCode": "20971",
+        "model_mae": 1609.1669816361325,
+        "model_wape_percent": 67.47545762206937,
+        "model_total_absolute_error_units": 17700.836797997457
+      },
+      {
+        "StockCode": "20668",
+        "model_mae": 1586.0190357425888,
+        "model_wape_percent": 76.21094440489462,
+        "model_total_absolute_error_units": 17446.209393168476
+      },
+      {
+        "StockCode": "16014",
+        "model_mae": 1475.6657773424433,
+        "model_wape_percent": 104.14013954427969,
+        "model_total_absolute_error_units": 16232.323550766876
+      }
+    ]
+  },
+  "saved_training_report_comparison": {
+    "available": true,
+    "matches_saved_test_metrics": true,
+    "comparison": {
+      "observations": {
+        "current": 48511,
+        "saved_training_report": 48511,
+        "matches": true
+      },
+      "mae": {
+        "current": 59.224596693246,
+        "saved_training_report": 59.224596693246,
+        "matches": true
+      },
+      "rmse": {
+        "current": 236.04926951307777,
+        "saved_training_report": 236.04926951307777,
+        "matches": true
+      },
+      "wape_percent": {
+        "current": 47.73490193455546,
+        "saved_training_report": 47.73490193455546,
+        "matches": true
+      }
+    }
+  },
+  "residual_sign_convention": "actual - predicted; positive means under-forecast, negative means over-forecast",
+  "monitoring_note": "Weekly metrics are computed retrospectively on the historical held-out test period. For live monitoring, actual sales must be joined to forecasts after the four-week horizon matures. Adjacent weekly forecast origins have overlapping four-week target windows, so weekly points are not independent.",
+  "artifacts": {
+    "predictions_csv": "/run/media/shazia/SEM/CODES/stockout-radar/reports/metrics/holdout_predictions.csv",
+    "product_metrics_csv": "/run/media/shazia/SEM/CODES/stockout-radar/reports/metrics/product_level_evaluation.csv",
+    "weekly_monitoring_csv": "/run/media/shazia/SEM/CODES/stockout-radar/reports/metrics/weekly_monitoring.csv",
+    "largest_under_predictions_csv": "/run/media/shazia/SEM/CODES/stockout-radar/reports/metrics/largest_under_predictions.csv",
+    "largest_over_predictions_csv": "/run/media/shazia/SEM/CODES/stockout-radar/reports/metrics/largest_over_predictions.csv",
+    "figures": [
+      "/run/media/shazia/SEM/CODES/stockout-radar/reports/figures/holdout_actual_vs_predicted.png",
+      "/run/media/shazia/SEM/CODES/stockout-radar/reports/figures/holdout_residual_distribution.png",
+      "/run/media/shazia/SEM/CODES/stockout-radar/reports/figures/holdout_weekly_mae.png",
+      "/run/media/shazia/SEM/CODES/stockout-radar/reports/figures/holdout_weekly_wape.png",
+      "/run/media/shazia/SEM/CODES/stockout-radar/reports/figures/holdout_weekly_actual_vs_predicted.png"
+    ]
+  }
+}

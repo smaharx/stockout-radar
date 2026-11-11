@@ -1,0 +1,93 @@
+{
+  "selected_model": "HistGradientBoosting",
+  "feature_columns": [
+    "units_lag1",
+    "units_lag2",
+    "units_lag4",
+    "units_mean4",
+    "units_std4",
+    "units_mean8",
+    "units_std8",
+    "orders_lag1",
+    "orders4",
+    "price_lag1",
+    "price_change4",
+    "trend_ratio",
+    "week_of_year",
+    "month",
+    "weeks_to_xmas",
+    "product_age"
+  ],
+  "target": "target",
+  "split": {
+    "train_start": "2010-02-01",
+    "train_end": "2011-04-25",
+    "validation_start": "2011-05-23",
+    "validation_end": "2011-08-01",
+    "test_start": "2011-08-29",
+    "test_end": "2011-11-07",
+    "embargo_weeks": 4
+  },
+  "validation_results": {
+    "Moving Average Baseline": {
+      "observations": 46123,
+      "mae": 45.34308262688897,
+      "rmse": 162.6715387154574,
+      "wape_percent": 58.46568323636853
+    },
+    "Existing Saved Model": {
+      "model": "HistGradientBoostingRegressor",
+      "observations": 46123,
+      "mae": 38.54122961877203,
+      "rmse": 140.59961348211846,
+      "wape_percent": 49.695327090421806
+    },
+    "Ridge Regression": {
+      "observations": 46123,
+      "mae": 46.89094393610774,
+      "rmse": 140.18640876977716,
+      "wape_percent": 60.46150627608725
+    },
+    "Random Forest": {
+      "observations": 46123,
+      "mae": 48.77633324087993,
+      "rmse": 149.08286421850892,
+      "wape_percent": 62.892540239461425
+    },
+    "Gradient Boosting": {
+      "observations": 46123,
+      "mae": 45.25083491775104,
+      "rmse": 165.4436479459689,
+      "wape_percent": 58.34673840444965
+    },
+    "HistGradientBoosting": {
+      "observations": 46123,
+      "mae": 38.588039538431744,
+      "rmse": 140.70898494740945,
+      "wape_percent": 49.75568412343751
+    }
+  },
+  "test_results": {
+    "Selected New Model": {
+      "observations": 48511,
+      "mae": 59.224596693246,
+      "rmse": 236.04926951307777,
+      "wape_percent": 47.73490193455546
+    },
+    "Moving Average Baseline": {
+      "observations": 48511,
+      "mae": 66.10847024386221,
+      "rmse": 236.2271626448042,
+      "wape_percent": 53.28328971962617
+    },
+    "Existing Saved Model": {
+      "model": "HistGradientBoostingRegressor",
+      "observations": 48511,
+      "mae": 59.79791465246519,
+      "rmse": 240.92985226009472,
+      "wape_percent": 48.19699501899462
+    }
+  },
+  "training_rows": 283049,
+  "scikit_learn_version": "1.8.0"
+}
