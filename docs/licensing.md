@@ -1,17 +1,38 @@
-# Licensing and attribution notes
+# Licensing and attribution
+
+## Project software
+
+Unless a file or directory states otherwise, the original Stockout Radar software and project-authored documentation in this repository are made available under the MIT License.
+
+See the [LICENSE](../LICENSE) file for the complete terms.
+
+This license applies to project material for which the relevant copyright holders have authorized this release. It does not replace or override the separate terms that apply to third-party dependencies, external services, datasets, or other third-party material.
+
+The maintained repository extends the original Stockout Radar academic project:
+
+https://github.com/ManahilFatima16/stockout-radar
+
+Please preserve the project's contributor and academic attribution when redistributing or adapting the project.
 
 ## Dataset
 
-The Online Retail II dataset is attributed to the UCI Machine Learning Repository and is identified by the project as CC BY 4.0. Follow the dataset provider's attribution and licence terms when redistributing the dataset or derived material.
+The Online Retail II dataset is attributed to the UCI Machine Learning Repository and is identified by the project as licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).
 
-Dataset page: <https://archive.ics.uci.edu/dataset/502/online+retail>
+- Dataset page: https://archive.ics.uci.edu/dataset/502/online+retail
+- License deed: https://creativecommons.org/licenses/by/4.0/
 
-Licence text: <https://creativecommons.org/licenses/by/4.0/>
+The raw and processed transaction files are not included in this repository. Anyone obtaining or redistributing the dataset or adaptations of it must follow the dataset provider's applicable terms, including attribution.
 
-## Repository software
+The MIT license for the project software does not relicense the dataset.
 
-The GitHub repository currently has no `LICENSE` file. This documentation therefore does not declare the repository's Python, TypeScript, notebooks, model artifacts, or other project code to be MIT-licensed (or licensed under another open-source licence).
+## Third-party components
 
-Do not add an MIT badge or an MIT `LICENSE` file unless the relevant copyright holders have authority to grant those rights and have agreed to the terms. The project credits multiple contributors and builds on the original Stockout Radar academic repository; preserve that attribution and resolve ownership/permission before relicensing.
+Python packages, JavaScript packages, fonts, icons, hosted services, and other third-party components remain subject to their respective licenses and terms.
 
-A public GitHub repository without a licence is not equivalent to an MIT-licensed repository. Users should not assume they have permission to redistribute or create derivative works from code merely because it is publicly viewable.
+Consult the relevant upstream project or package metadata before redistributing those components.
+
+## Attribution
+
+The project README records the original project contributors and their contributions.
+
+This maintained repository builds on the original academic project and adds the documented forecasting, API, inventory decision-support, frontend, deployment, and testing work.

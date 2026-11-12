@@ -10,7 +10,7 @@
 [![Backend tests](https://img.shields.io/badge/Backend%20tests-40%20passing-brightgreen)](https://github.com/smaharx/stockout-radar/tree/main/tests)
 [![CI](https://github.com/smaharx/stockout-radar/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaharx/stockout-radar/actions/workflows/ci.yml)
 [![Dataset licence](https://img.shields.io/badge/Dataset%20licence-CC%20BY%204.0-lightgrey)](https://creativecommons.org/licenses/by/4.0/)
-[![Software licence](https://img.shields.io/badge/Software%20licence-not%20declared-lightgrey)](docs/licensing.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > **Important scope statement:** Stockout Radar forecasts demand from historical sales and applies an inventory replenishment rule to operator-supplied stock inputs. The source dataset contains no historical stock balances or stockout labels. The project therefore does **not** directly predict or validate stockout events.
 
@@ -115,7 +115,7 @@ The saved model was created with Scikit-learn 1.8.0. Keep the pinned model/runti
 - **Dataset licence:** [Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
 - **Transaction period:** 1 December 2009 to 9 December 2011.
 - **Source size:** 1,067,371 transactions.
-- Raw and processed transaction files are deliberately excluded from Git because of their size. Download the source data separately and follow the analysis notebooks before rebuilding the weekly panel.
+Raw and processed transaction files, along with the original exploratory notebooks, are not included in this maintained repository version. The trained model artifact and application workflow are included. Rebuilding forecasts requires the prepared `data/processed/weekly_panel.csv` and a compatible model artifact. The documented feature definitions and evaluation methodology are available in [the model card](docs/model-card.md). A clean checkout does not currently provide a complete one-command raw-data-to-model reproduction workflow.
 
 The documented cleaned panel contains 4,675 products and 407,702 product-weeks. The training workflow filters rows that do not have the required lag/rolling history and a complete four-week future target. See [Model card](docs/model-card.md) for the full task definition, split and known limitations.
 
@@ -195,7 +195,7 @@ python -m pip install -r requirements-backend.txt
 python -m pip install -r requirements-dev.txt
 ```
 
-`requirements-backend.txt` pins the numerical/model versions used by the saved artifact. `requirements.txt` also includes dependencies used by the original analysis/notebooks.
+`requirements-backend.txt` pins the numerical/model versions used by the saved artifact. `requirements.txt` also includes dependencies used by the data-preparation, evaluation, and original analysis workflow.
 
 ### 3. Configure local environment
 
@@ -219,7 +219,7 @@ The refresh job requires the prepared weekly panel and saved model artifact:
 PYTHONPATH=src python scripts/refresh_forecasts.py
 ```
 
-The raw/processed datasets are not included in the repository. Follow the analysis notebooks to download, clean and aggregate the UCI data and produce `data/processed/weekly_panel.csv` before running the refresh. Do not run this command against production unless you deliberately intend to replace the active forecast run and have backed up the database.
+The raw and processed datasets, as well as the original exploratory notebooks, are not included in this maintained repository. A clean checkout therefore does not provide a complete raw-data-to-weekly-panel reproduction workflow. To run the refresh, provide a prepared `data/processed/weekly_panel.csv` using the documented feature and aggregation definitions. Do not run this command against production unless you deliberately intend to replace the active forecast run and have backed up the database.
 
 ### 5. Start the backend
 
@@ -330,19 +330,39 @@ For the one-time SQLite-to-Neon migration, use the **direct** Neon connection st
 
 ```text
 stockout-radar/
-├── .github/workflows/ci.yml       # Backend and frontend CI checks
-├── data/                          # Raw/processed data ignored; templates and sample tracked
-├── docs/                           # Architecture, API, deployment, model, security, testing
-├── frontend/                       # Next.js App Router application
-├── models/                         # Saved model artifacts
-├── notebooks/                      # Original data/ML analysis notebooks
-├── reports/                        # Evaluation metrics and figures
-├── scripts/                        # Forecast refresh, assessment, migration and audits
-├── src/main.py                     # Vercel FastAPI entrypoint
-├── src/stockout_radar/             # Forecasting, features, inventory and API modules
-├── tests/                          # Pytest suite
-├── requirements*.txt               # Python dependency sets
-└── README.md
+├── .github/
+│   └── workflows/
+│       └── ci.yml                 # Backend and frontend CI checks
+├── data/
+│   ├── raw/                       # Downloaded source data (not tracked)
+│   ├── processed/                 # Generated data (not tracked)
+│   ├── samples/                   # Synthetic demonstration data
+│   └── templates/                 # Inventory input templates
+├── docs/                          # Architecture, API, deployment, model,
+│                                  # licensing, testing and operations
+├── frontend/                      # Next.js App Router application
+├── models/                        # Saved model artifacts
+├── reports/
+│   ├── figures/                   # Evaluation visualizations
+│   ├── metrics/                   # Model evaluation results
+│   └── outputs/                   # Demonstration outputs
+├── scripts/                       # Forecasting, assessment, migration
+│                                  # and feature-parity utilities
+├── src/
+│   ├── main.py                    # Vercel FastAPI entrypoint
+│   └── stockout_radar/            # Forecasting, features, inventory
+│                                  # and API modules
+├── tests/                         # Backend automated tests
+├── .env.example                   # Local environment template
+├── BACKEND_SETUP.md               # Backend setup instructions
+├── CONTRIBUTING.md                # Contribution guidelines
+├── INSTALL_FRONTEND.md            # Frontend installation instructions
+├── LICENSE                        # MIT License
+├── README.md                      # Project documentation
+├── SECURITY.md                    # Security policy
+├── requirements-backend.txt       # Backend dependencies
+├── requirements-dev.txt           # Development dependencies
+└── requirements.txt               # Project dependencies
 ```
 
 ## Contributors and academic context
@@ -355,9 +375,13 @@ This repository extends the original Stockout Radar academic project into a full
 | Shahzaib Mahar | Data preprocessing |
 | Manahil Fatima | Model development and original application work |
 
-## Licence
+## License
 
-The **dataset** is distributed under CC BY 4.0 by UCI. The repository does not currently contain a software `LICENSE` file, so no MIT or other software licence is claimed. See [Licensing notes](docs/licensing.md). Do not add an MIT licence unless the relevant copyright holders have agreed that the repository code may be released under those terms.
+Unless otherwise stated, the original Stockout Radar software and project-authored documentation in this repository are licensed under the MIT License. See [LICENSE](LICENSE) for the full terms.
+
+The Online Retail II dataset is separately attributed to the UCI Machine Learning Repository and is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The MIT software license does not relicense the dataset.
+
+Third-party libraries, dependencies and other external components remain subject to their respective licenses. See [Licensing and attribution](docs/licensing.md).
 
 ## Acknowledgements
 
