@@ -1,263 +1,229 @@
 # Stockout Radar
 
-**Machine-learning demand forecasting and inventory replenishment decision support for small retailers.**
+**Historical product-demand forecasting and inventory replenishment decision support for small retailers.**
 
-Stockout Radar is an academic full-stack project that combines historical sales forecasting with operator-provided inventory information to produce replenishment recommendations.
+[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.162.2-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.6-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.3.1-087ea4?logo=react)](https://react.dev/)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%7C%20Neon-4169e1?logo=postgresql)](https://www.postgresql.org/)
+[![Backend tests](https://img.shields.io/badge/Backend%20tests-40%20passing-brightgreen)](https://github.com/smaharx/stockout-radar/tree/main/tests)
+[![CI](https://github.com/smaharx/stockout-radar/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaharx/stockout-radar/actions/workflows/ci.yml)
+[![Dataset licence](https://img.shields.io/badge/Dataset%20licence-CC%20BY%204.0-lightgrey)](https://creativecommons.org/licenses/by/4.0/)
+[![Software licence](https://img.shields.io/badge/Software%20licence-not%20declared-lightgrey)](docs/licensing.md)
 
-> **Scope and limitation:** Stockout Radar forecasts product demand and applies inventory rules to recommend replenishment. The source dataset does not contain historical inventory balances or stockout labels, so this project does not directly predict or validate actual stockout events.
+> **Important scope statement:** Stockout Radar forecasts demand from historical sales and applies an inventory replenishment rule to operator-supplied stock inputs. The source dataset contains no historical stock balances or stockout labels. The project therefore does **not** directly predict or validate stockout events.
 
-## Project overview
+## Live deployments
 
-The application uses the Online Retail II transaction dataset to build weekly product-demand features and generate an aggregate four-week demand forecast for each product. Users provide current stock, supplier lead time, and safety stock. The inventory engine combines these inputs with the forecast to estimate lead-time demand, calculate a reorder point, and recommend an order quantity.
+- **Frontend:** [https://stockout-radar.vercel.app](https://stockout-radar.vercel.app)
+- **Backend API:** [https://stockout-radar-api.vercel.app](https://stockout-radar-api.vercel.app)
+- **API base path:** `/api/v1`
 
-The project contains:
+The production frontend uses a single shared administrator HTTP Basic Authentication gate. Backend API routes require a bearer API key. Do not publish credentials or place them in browser-visible `NEXT_PUBLIC_` variables.
 
-- A Python demand-forecasting and evaluation pipeline.
-- A FastAPI REST API.
-- SQLAlchemy database models and persistence services.
-- SQLite for local development and PostgreSQL for hosted operation.
-- A Next.js, React, and TypeScript web application.
-- Inventory management and saved replenishment assessments.
-- Backend automated tests and frontend type, lint, and production-build checks.
+## What the system does
+
+1. Builds a product-by-week demand panel from Online Retail II transactions.
+2. Engineers lagged, rolling, price, trend and calendar features using information available before the forecast week.
+3. Uses a trained `HistGradientBoosting` model to estimate aggregate unit demand over the next four weeks for each eligible product.
+4. Persists forecast runs and product forecasts in PostgreSQL.
+5. Lets an operator maintain current stock, supplier lead time and safety stock.
+6. Compares saved inventory inputs with forecasts and persists a replenishment assessment.
+7. Presents the catalog, forecast records, inventory and recommendations in a Next.js dashboard.
+
+## Production acceptance snapshot
+
+The following was observed during the production workflow demonstration on **12 November 2026**. It is a point-in-time demonstration result, not a permanent count or a model-accuracy claim.
+
+| Item | Observed result |
+|---|---:|
+| Latest assessment | #4 |
+| Products assessed | 3 |
+| Reorder now | 3 |
+| Watch | 0 |
+| Healthy | 0 |
+| Suggested replenishment | 51 units |
+
+The user interface also confirmed that an inventory update for product `21003` was saved. Production records can change as operators add or update inventory and run assessments.
 
 ## Architecture
 
 ```text
-Online Retail II historical transactions
-                  |
-                  v
-        Cleaning and weekly aggregation
-                  |
-                  v
-       Weekly product demand features
-                  |
-                  v
-       Trained machine-learning model
-                  |
-                  v
-         Four-week demand forecasts
-                  |
-                  v
-             Forecast database
-                  |
-        +---------+----------+
-        |                    |
-        v                    v
-  Forecast records     User inventory inputs
-                       - Current stock
-                       - Lead time
-                       - Safety stock
-        |                    |
-        +---------+----------+
-                  |
-                  v
-         Inventory assessment
-                  |
-                  v
-       Replenishment recommendations
-                  |
-                  v
-              FastAPI
-                  |
-                  v
-          Next.js frontend
+UCI Online Retail II (historical transactions)
+                |
+                v
+       Cleaning and weekly panel
+                |
+                v
+       16 leakage-controlled features
+                |
+                v
+     HistGradientBoosting model artifact
+                |
+                v
+    Offline forecast refresh script
+                |
+                v
+        Neon PostgreSQL database
+          |                 |
+          |                 +---- Operator inventory inputs
+          |                              |
+          +-------------+----------------+
+                        v
+              Inventory assessment
+                        |
+                        v
+             Persisted recommendations
+                        |
+                        v
+                FastAPI REST API
+                        ^
+                        | bearer API key
+                        |
+              Next.js server-side proxy
+                        ^
+                        | administrator Basic Auth
+                        |
+                 Browser / user
 ```
+
+**Deployment boundary:** model inference and forecast generation are an offline/batch operation. The serverless API reads persisted forecasts and runs inventory assessments; it does not train the model or regenerate all product forecasts on a public request.
+
+See [Architecture](docs/architecture.md), [API reference](docs/api-reference.md), and [Deployment runbook](docs/deployment.md).
 
 ## Technology stack
 
 | Layer | Technology |
 |---|---|
-| Language | Python 3.12 |
-| Data processing | Pandas, NumPy |
-| Machine learning | Scikit-learn |
-| Model serialization | Joblib |
-| API | FastAPI |
-| Database access | SQLAlchemy |
-| Local database | SQLite |
-| Hosted database | PostgreSQL / Neon |
-| Frontend | Next.js, React, TypeScript |
-| UI icons | Lucide React |
-| Backend tests | Pytest |
-| Frontend checks | TypeScript, ESLint, Next.js build |
-| Version control | Git and GitHub |
-| Deployment target | Vercel |
+| Runtime | Python 3.12; Node.js 24 for the frontend build |
+| Data processing | Pandas 3.1.1, NumPy 2.5.4 |
+| Machine learning | Scikit-learn 1.8.0; `HistGradientBoosting` |
+| Model persistence | Joblib 1.6.0 |
+| Backend | FastAPI 0.162.2, SQLAlchemy 2.1.8, Uvicorn |
+| Database | PostgreSQL on Neon; SQLite for local development |
+| Frontend | Next.js 16.4.6, React 19.3.1, TypeScript |
+| UI icons | Lucide React 1.70.0 |
+| Tests and checks | Pytest, TypeScript, ESLint, Next.js production build |
+| Hosting | Two Vercel projects (frontend and backend) |
 
-## Dataset
+The saved model was created with Scikit-learn 1.8.0. Keep the pinned model/runtime versions in `requirements-backend.txt` compatible when loading or retraining the serialized artifact.
 
-The project uses **Online Retail II** from the UCI Machine Learning Repository.
+## Dataset and preparation
 
-- Dataset: https://archive.ics.uci.edu/dataset/502/online+retail
-- License: CC BY 4.0
-- Historical transaction period: 1 December 2009 to 9 December 2011.
-- The raw dataset is not stored in this repository. Download it separately when reproducing the data-preparation and training workflow.
+- **Dataset:** [Online Retail II — UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/502/online+retail)
+- **Dataset licence:** [Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
+- **Transaction period:** 1 December 2009 to 9 December 2011.
+- **Source size:** 1,067,371 transactions.
+- Raw and processed transaction files are deliberately excluded from Git because of their size. Download the source data separately and follow the analysis notebooks before rebuilding the weekly panel.
 
-The cleaned project data excludes cancellations, non-positive quantities and prices, and non-product transaction codes. The weekly product panel contains 4,675 products and 407,702 product-weeks before model-row filtering.
+The documented cleaned panel contains 4,675 products and 407,702 product-weeks. The training workflow filters rows that do not have the required lag/rolling history and a complete four-week future target. See [Model card](docs/model-card.md) for the full task definition, split and known limitations.
 
-## Forecasting methodology
+## Forecast definition and feature set
 
-The forecasting workflow constructs a weekly product-level panel and engineers 16 features, including:
+The prediction target is **total units sold over the current forecast origin week and the following three weeks** (four-week aggregate demand). It is not four separate weekly predictions.
 
-- Recent sales lags.
-- Rolling demand means and standard deviations.
-- Order-count features.
-- Price and price-change features.
-- Demand trend features.
-- Calendar and product-age features.
+The 16 model features are:
 
-The target is the total number of product units sold over the next four weeks. Features use information available before the forecast period. The evaluation uses chronological data splits and a moving-average baseline.
+`units_lag1`, `units_lag2`, `units_lag4`, `units_mean4`, `units_std4`, `units_mean8`, `units_std8`, `orders_lag1`, `orders4`, `price_lag1`, `price_change4`, `trend_ratio`, `week_of_year`, `month`, `weeks_to_xmas`, and `product_age`.
 
-The current forecast service uses the saved model artifact:
-
-```text
-models/stockout_radar_v1.joblib
-```
-
-The legacy artifact `models/gb_model.joblib` is retained for compatibility with the original project code. The current forecasting service explicitly loads `stockout_radar_v1.joblib`.
+Lagged and rolling sales/order/price features are shifted so that model inputs use information through the week before the prediction origin. The four-week target is used only as the label during training.
 
 ## Evaluation results
 
-The current chronological holdout evaluation produced these aggregate results:
+The committed retrospective holdout report records 48,511 product-week observations over the test origins 29 August–7 November 2011.
 
-| Model | MAE | RMSE | WAPE |
+| Model | MAE (units) | RMSE (units) | WAPE |
 |---|---:|---:|---:|
-| Selected model | 59.2246 | 236.0493 | 47.7349% |
-| Four-week moving-average baseline | 66.1085 | 236.2273 | 53.2833% |
+| Selected model (`HistGradientBoosting`) | 59.2246 | 236.0493 | 47.7349% |
+| Four-week moving-average baseline | 66.1085 | 236.2272 | 53.2833% |
 
-These metrics describe aggregate holdout performance and are not accuracy guarantees for individual products. The selected model outperformed the moving-average baseline on the aggregate measures shown, but did so for approximately 40.3% of evaluated products (1,809 of 4,484). Performance varies across products, and sudden high-volume demand spikes remain difficult to forecast.
+The selected model improves aggregate MAE by approximately 6.88 units and WAPE by approximately 5.55 percentage points versus the moving-average baseline. It has lower RMSE by a small margin. At product level, it has lower MAE than the baseline for 1,809 of 4,484 evaluated products (about 40.3%); therefore, aggregate improvement does not mean the model wins for most individual products. Bulk-order spikes and product-level variation remain important limitations.
 
-Evaluation figures and selected metric summaries are stored under `reports/`.
+Metric values are retrospective results on historical data; they are not current-market accuracy guarantees. See `reports/metrics/holdout_evaluation.json` and [Model card](docs/model-card.md).
 
-## Inventory and recommendation logic
+## Inventory and replenishment logic
 
-The user supplies three inventory inputs:
+Operators provide three values per product:
 
-- `current_stock`: on-hand quantity.
-- `lead_time_days`: supplier replenishment lead time.
-- `safety_stock`: additional buffer quantity.
+- `current_stock`: verified on-hand units.
+- `lead_time_days`: supplier replenishment lead time, from 1 to 28 days.
+- `safety_stock`: buffer units held above estimated lead-time demand.
 
-The assessment engine uses the four-week forecast to estimate average daily demand and lead-time demand. The core calculations are:
-
-```text
-Average daily demand = Four-week forecast / 28
-Lead-time demand = Average daily demand × Lead time
-Reorder point = Lead-time demand + Safety stock
-```
-
-The engine also calculates a target stock level, estimated days of cover, and recommended order quantity. Recommendations are classified as `HEALTHY`, `WATCH`, or `REORDER_NOW`.
-
-These outputs are decision-support recommendations. An inventory operator should review them before placing a purchase order.
-
-## Historical-data limitations
-
-The source sales data ends on 9 December 2011. The migrated demonstration forecast run records history through 28 November 2011 and a forecast start week of 5 December 2011. These are historical demonstration forecasts, not current-market predictions.
-
-Other limitations include:
-
-1. The dataset contains sales transactions but no historical inventory balances or observed stockout events.
-2. The forecast cannot be validated against actual historical stockout outcomes.
-3. Sudden bulk orders and demand changes can produce substantial forecast errors.
-4. Product-level model performance varies; aggregate metrics should not be interpreted as per-product accuracy guarantees.
-5. Products with insufficient sales history may not receive a model forecast.
-
-A live operational use case requires current sales ingestion, a controlled forecast-refresh schedule, ongoing evaluation, and appropriate operational review.
-
-## Repository structure
+The current rule assumes the four-week demand forecast is distributed evenly over 28 days:
 
 ```text
-stockout-radar/
-├── data/
-│   ├── raw/                       # Downloaded source data; not committed
-│   ├── processed/                 # Generated data; not committed
-│   ├── samples/                   # Small synthetic demonstration data
-│   └── templates/                 # Inventory input template
-├── frontend/
-│   ├── app/                       # Overview, forecasts, inventory, recommendations
-│   ├── components/
-│   ├── lib/
-│   └── package.json
-├── models/                        # Saved model artifacts
-├── notebooks/                     # Original analysis and ML notebooks
-├── reports/
-│   ├── figures/
-│   ├── metrics/
-│   └── outputs/
-├── scripts/                       # Forecast, evaluation and migration utilities
-├── src/
-│   ├── main.py                    # FastAPI deployment entrypoint
-│   └── stockout_radar/
-│       ├── api/
-│       ├── features.py
-│       ├── forecasting.py
-│       ├── inventory.py
-│       ├── model.py
-│       └── training.py
-├── tests/
-├── requirements.txt
-├── requirements-backend.txt
-└── requirements-dev.txt
+average_daily_demand = forecast_4week_demand / 28
+estimated_lead_time_demand = average_daily_demand * lead_time_days
+reorder_point = estimated_lead_time_demand + safety_stock
+target_stock_level = forecast_4week_demand + safety_stock
 ```
+
+Risk classification:
+
+- `REORDER_NOW` when `current_stock <= reorder_point`.
+- `WATCH` when the reorder point is not breached but `current_stock < target_stock_level`.
+- `HEALTHY` otherwise.
+
+When reorder is required, recommended quantity is the ceiling of the positive gap between target stock and current stock; otherwise it is zero. This is a decision-support heuristic, not a purchase order. It does not currently account for open purchase orders, reservations, supplier minimums, multiple locations, variable daily seasonality, or uncertainty intervals.
 
 ## Local development
 
 ### Prerequisites
 
-- Python 3.12.
-- Node.js 20.9 or newer.
-- npm and Git.
+- Python 3.12
+- Node.js 20.9 or newer (Node.js 24 is used in the current deployment configuration)
+- npm and Git
+- The model artifact `models/stockout_radar_v1.joblib`
+- For regenerating forecasts: `data/processed/weekly_panel.csv`
 
-### 1. Clone the repository
+### 1. Clone and create the Python environment
 
 ```bash
 git clone https://github.com/smaharx/stockout-radar.git
 cd stockout-radar
-```
-
-### 2. Create and activate the Python environment
-
-```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 ```
 
-### 3. Install Python dependencies
+### 2. Install dependencies
 
 ```bash
-pip install -r requirements.txt
-pip install -r requirements-backend.txt
-pip install -r requirements-dev.txt
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-backend.txt
+python -m pip install -r requirements-dev.txt
 ```
 
-The backend dependency file pins the numerical and model-related package versions used by the saved model artifact.
+`requirements-backend.txt` pins the numerical/model versions used by the saved artifact. `requirements.txt` also includes dependencies used by the original analysis/notebooks.
 
-### 4. Configure local environment variables
+### 3. Configure local environment
 
 ```bash
 cp .env.example .env
 ```
 
-Local development defaults to SQLite when `DATABASE_URL` is not set and `APP_ENV=local`. Do not commit `.env` or any real credentials.
+Local development defaults to SQLite when `APP_ENV=local` and `DATABASE_URL` is unset. The local frontend uses `frontend/.env.local`:
 
-### 5. Prepare the forecasting inputs
+```dotenv
+STOCKOUT_RADAR_API_URL=http://127.0.0.1:8001
+```
 
-A new forecast run requires:
+Do not put real secrets in tracked files. `.env`, `.env.local`, database files, virtual environments and build output are ignored by Git.
 
-- `data/processed/weekly_panel.csv`
-- `models/stockout_radar_v1.joblib`
+### 4. Prepare data and refresh forecasts (only when rebuilding the forecast snapshot)
 
-The raw and processed datasets are intentionally excluded from Git. Download and prepare the UCI dataset using the project's data-preparation notebooks before regenerating forecasts.
-
-### 6. Generate and store forecasts
+The refresh job requires the prepared weekly panel and saved model artifact:
 
 ```bash
 PYTHONPATH=src python scripts/refresh_forecasts.py
 ```
 
-This batch command generates four-week forecasts and persists a forecast run to the database configured by `DATABASE_URL` (or the local SQLite default).
+The raw/processed datasets are not included in the repository. Follow the analysis notebooks to download, clean and aggregate the UCI data and produce `data/processed/weekly_panel.csv` before running the refresh. Do not run this command against production unless you deliberately intend to replace the active forecast run and have backed up the database.
 
-### 7. Start the backend
+### 5. Start the backend
 
-From the repository root:
+From the repository root, in terminal 1:
 
 ```bash
 source .venv/bin/activate
@@ -265,52 +231,46 @@ APP_ENV=local python -m uvicorn stockout_radar.api.main:app \
   --reload --app-dir src --port 8001
 ```
 
-- API base: http://127.0.0.1:8001/api/v1
-- Interactive API documentation: http://127.0.0.1:8001/docs
-- Health endpoint: http://127.0.0.1:8001/api/v1/health
+- API base: `http://127.0.0.1:8001/api/v1`
+- Swagger UI: `http://127.0.0.1:8001/docs`
+- Health: `http://127.0.0.1:8001/api/v1/health`
 
-### 8. Install and start the frontend
+### 6. Start the frontend
 
-In another terminal:
+In terminal 2:
 
 ```bash
 cd frontend
 npm ci
 ```
 
-Create `frontend/.env.local` with:
-
-```dotenv
-STOCKOUT_RADAR_API_URL=http://127.0.0.1:8001
-```
-
-Start Next.js:
+Create `frontend/.env.local` with the backend URL shown above, then:
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open `http://localhost:3000`. The production-only administrator gate is bypassed in Next.js development mode; local API-key enforcement is also relaxed when local `APP_ENV` has no API key configured. Never copy production secrets into a public or shared development environment.
 
-## API endpoints
+## API overview
 
-All backend endpoints use the `/api/v1` prefix.
+All application routes use `/api/v1` and require a bearer token when `STOCKOUT_RADAR_API_KEY` is configured (required in production).
 
-| Method | Endpoint | Purpose |
+| Method | Path | Purpose |
 |---|---|---|
-| GET | `/health` | Application and database health |
-| GET | `/products` | Forecasted products |
-| GET | `/forecasts` | Product forecast records |
-| GET | `/inventory` | Inventory records |
-| PUT | `/inventory/{stock_code}` | Create or update an inventory record |
-| POST | `/inventory/assessment` | Generate and save an assessment |
-| GET | `/inventory/assessment` | Retrieve the latest saved assessment |
+| `GET` | `/api/v1/health` | API and database readiness |
+| `GET` | `/api/v1/products` | Search/paginate catalog products with active forecasts |
+| `GET` | `/api/v1/forecasts` | Search/paginate active four-week forecasts |
+| `GET` | `/api/v1/inventory` | List operator inventory inputs |
+| `PUT` | `/api/v1/inventory/{stock_code}` | Create or update one product's inventory inputs |
+| `POST` | `/api/v1/inventory/assessment` | Calculate and persist an assessment for all tracked items |
+| `GET` | `/api/v1/inventory/assessment` | Retrieve the latest saved assessment |
 
-Production API endpoints require a bearer API key. The deployed frontend additionally uses an administrator HTTP Basic Authentication gate. This is a single-administrator demonstration safeguard, not a multi-user identity or role-based access-management system.
+`products` and `forecasts` accept `search`, `limit` (1–200) and `offset` query parameters. See [API reference](docs/api-reference.md) for examples and payload fields.
 
-## Testing
+## Testing and quality checks
 
-From the repository root:
+Backend tests (the last user-run verification recorded 40 passing tests):
 
 ```bash
 source .venv/bin/activate
@@ -322,60 +282,84 @@ Frontend checks:
 
 ```bash
 cd frontend
+npm ci
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-## Deployment
+The repository also includes a GitHub Actions workflow that runs backend tests and frontend checks on pushes and pull requests. Passing CI does not replace the production smoke tests documented in [Testing](docs/testing.md).
 
-The deployment target uses two Vercel projects connected to this GitHub repository and a Neon PostgreSQL database.
+## Production deployment
 
-| Vercel project | Root directory | Function region |
-|---|---|---|
-| Backend | `src` | `sin1` (Singapore) |
-| Frontend | `frontend` | `sin1` (Singapore) |
+The production installation consists of two Vercel projects connected to the same GitHub repository plus a Neon PostgreSQL database.
 
-The repository contains project-specific `vercel.json` files for the two roots. Configure the following server-side environment variables in the Vercel backend project:
+| Service | Vercel project | Root directory | Region | Production domain |
+|---|---|---|---|---|
+| Frontend | `stockout-radar` | `frontend` | `sin1` (Singapore) | `https://stockout-radar.vercel.app` |
+| Backend | `stockout-radar-api` | `src` | `sin1` (Singapore) | `https://stockout-radar-api.vercel.app` |
+| Database | Neon | Managed PostgreSQL | Provider region | Private connection string |
+
+Backend Production variables:
 
 - `APP_ENV=production`
-- `DATABASE_URL`: Neon pooled PostgreSQL connection string.
+- `DATABASE_URL`: Neon **pooled** PostgreSQL connection string for the serverless runtime.
 - `STOCKOUT_RADAR_API_KEY`: private bearer token.
 
-Configure the following in the Vercel frontend project:
+Frontend Production variables:
 
-- `STOCKOUT_RADAR_API_URL`: deployed backend URL.
-- `STOCKOUT_RADAR_API_KEY`: the same private bearer token used by the backend.
+- `STOCKOUT_RADAR_API_URL=https://stockout-radar-api.vercel.app`
+- `STOCKOUT_RADAR_API_KEY`: exactly the same bearer token configured in the backend.
 - `STOCKOUT_RADAR_ADMIN_USER`: administrator username.
 - `STOCKOUT_RADAR_ADMIN_PASSWORD`: strong administrator password.
 
-Never commit actual environment-variable values, database connection strings, or passwords.
+The frontend proxy adds the bearer token server-side; it is not sent to browser JavaScript. The app's administrator gate uses HTTP Basic Authentication. Both are shared single-admin demonstration controls, not multi-user identity, tenant isolation or a role-based authorization system.
 
-### SQLite to PostgreSQL migration
+For the one-time SQLite-to-Neon migration, use the **direct** Neon connection string in the migration process. Use the **pooled** connection string for the Vercel serverless backend. Do not rerun the migration against an already populated target; the script protects against copying into a non-empty application database. Full instructions are in [Deployment](docs/deployment.md).
 
-The one-time migration utility is:
+## Security and operational boundaries
 
-```bash
-APP_ENV=production PYTHONPATH=src \
-python scripts/migrate_sqlite_to_postgres.py
+- Never commit `.env`, `.env.local`, `DATABASE_URL`, API keys, administrator passwords, SQLite files or database exports.
+- Rotate the backend bearer key in both Vercel projects together if it is exposed.
+- Use separate strong values for the backend API key and frontend administrator password.
+- The current UI/API has one shared inventory space; there is no user/tenant separation.
+- SQLAlchemy `create_all` initializes tables; there is no Alembic migration history yet. Introduce versioned migrations before evolving the production schema.
+- Vercel Firewall/System Mitigations are separate from application authentication. A Vercel challenge/403 is not the same as the app's Basic Auth 401. See [Operations runbook](docs/operations-runbook.md).
+
+## Repository guide
+
+```text
+stockout-radar/
+├── .github/workflows/ci.yml       # Backend and frontend CI checks
+├── data/                          # Raw/processed data ignored; templates and sample tracked
+├── docs/                           # Architecture, API, deployment, model, security, testing
+├── frontend/                       # Next.js App Router application
+├── models/                         # Saved model artifacts
+├── notebooks/                      # Original data/ML analysis notebooks
+├── reports/                        # Evaluation metrics and figures
+├── scripts/                        # Forecast refresh, assessment, migration and audits
+├── src/main.py                     # Vercel FastAPI entrypoint
+├── src/stockout_radar/             # Forecasting, features, inventory and API modules
+├── tests/                          # Pytest suite
+├── requirements*.txt               # Python dependency sets
+└── README.md
 ```
 
-Set `DATABASE_URL` to the **direct** Neon connection string when running the migration. Use the **pooled** Neon connection string for the deployed serverless backend. The migration utility refuses to copy into a target containing existing application records and verifies the migrated row counts.
+## Contributors and academic context
 
-The Vercel Hobby plan is intended for personal, non-commercial use. Review the provider's current limits before using this application for commercial workloads.
+This repository extends the original Stockout Radar academic project into a full-stack demonstrator. The original project repository is [ManahilFatima16/stockout-radar](https://github.com/ManahilFatima16/stockout-radar); the maintained fork is [smaharx/stockout-radar](https://github.com/smaharx/stockout-radar).
 
-## Project contributors
-
-This project builds on the original Stockout Radar academic work.
-
-| Contributor | Original project responsibility |
+| Contributor | Project contribution (as recorded in the project README) |
 |---|---|
 | Muhammad Qasim | Project lead and ML pipeline |
 | Shahzaib Mahar | Data preprocessing |
 | Manahil Fatima | Model development and original application work |
 
-The original project repository is https://github.com/ManahilFatima16/stockout-radar. The maintained full-stack fork is https://github.com/smaharx/stockout-radar.
+## Licence
+
+The **dataset** is distributed under CC BY 4.0 by UCI. The repository does not currently contain a software `LICENSE` file, so no MIT or other software licence is claimed. See [Licensing notes](docs/licensing.md). Do not add an MIT licence unless the relevant copyright holders have agreed that the repository code may be released under those terms.
 
 ## Acknowledgements
 
-The Online Retail II dataset is provided by the UCI Machine Learning Repository under the CC BY 4.0 license. See the submitted academic report for the complete acknowledgements and AI-use disclosure.
+- Chen, D. (2012). *Online Retail II*. UCI Machine Learning Repository. [Dataset page](https://archive.ics.uci.edu/dataset/502/online+retail).
+- The original Stockout Radar project contributors and the academic project team.
