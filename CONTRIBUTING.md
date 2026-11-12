@@ -1,79 +1,53 @@
 # Contributing to Stockout Radar
 
-This is a team project (3 members). These rules keep the repository clean and stop us overwriting each other's work.
+Thank you for considering a contribution.
 
-## Branches
+## Before making changes
 
-| Branch | Purpose | Who can push |
-|---|---|---|
-| `main` | Stable, submission-ready code only | Nobody directly. Only through a pull request from `develop` |
-| `develop` | Integration branch where finished features are combined | Nobody directly. Only through pull requests from feature branches |
-| `feature/<name>` | One task each (for example `feature/streamlit-app`) | The person working on that task |
-| `fix/<name>` | Bug fixes | The person fixing it |
-| `docs/<name>` | Report, README, slides | The person writing it |
+1. Check existing issues and pull requests to avoid duplicate work.
+2. Create a feature branch from the latest `main`.
+3. Keep changes focused and explain their user or research value.
+4. Do not commit datasets, database files, credentials, generated environments, build output or unrelated reports.
+5. Preserve the original project/contributor attribution.
 
-Branch names use lowercase letters and hyphens.
+## Development setup
 
-## Daily workflow
+Follow the [README local development instructions](README.md#local-development).
 
-1. Get the latest code:
-   ```
-   git checkout develop
-   git pull origin develop
-   ```
-2. Create your branch from `develop`:
-   ```
-   git checkout -b feature/your-task
-   ```
-3. Work, then commit small and often:
-   ```
-   git add <files>
-   git commit -m "feat: add permutation importance plot"
-   ```
-4. Push your branch:
-   ```
-   git push -u origin feature/your-task
-   ```
-5. On GitHub, open a **pull request into `develop`**. Fill in the template. At least **one teammate reviews** it before merging.
-6. After the merge, delete the feature branch and pull `develop` again.
-7. When `develop` is stable (all notebooks run, results match the report), open a pull request from `develop` into `main`.
+## Quality gates
 
-## Commit messages
+Before opening a pull request, run:
 
-Start with a type, then a short description in the present tense.
+```bash
+APP_ENV=local PYTHONPATH=src python -m pytest -q
+python -m pip check
 
-| Type | Use for |
-|---|---|
-| `feat:` | New feature, notebook step or app function |
-| `fix:` | Bug fix |
-| `data:` | Cleaning or feature changes |
-| `exp:` | Model experiments and tuning |
-| `docs:` | README, report, comments |
-| `chore:` | Folders, requirements, configuration |
+cd frontend
+npm ci
+npm run typecheck
+npm run lint
+npm run build
+```
 
-## Notebook rules
+Include the command results in the pull request description. Add or update tests when changing forecasting, API, database, authentication or inventory behaviour.
 
-Notebooks are JSON files and merge badly.
+## Pull request expectations
 
-- **One owner per notebook.** Only the owner edits it. Ask the owner (or open a pull request to them) for changes.
-- Pull before you start, push when you stop.
-- Run **Restart and Run All** before committing, so the saved outputs match the code.
-- Keep shared functions in `src/` instead of copying code between notebooks.
-- Never commit large data files. The `data/` folder is ignored on purpose.
+A pull request should include:
 
-| Notebook | Owner (suggested) |
-|---|---|
-| `01_cleaning`, `02_aggregation`, `03_eda` | Shahzaib |
-| `04_features`, `05_split_baselines`, `06_models` | Qasim |
-| Evaluation, `app/` | Manahil |
+- A concise summary and motivation.
+- A list of changed areas.
+- Tests/checks run and their result.
+- Screenshots for visible frontend changes.
+- Notes for environment-variable, database or deployment changes.
+- Any known limitations, migration steps or rollback considerations.
 
-## Reproducibility rules (from the course guidelines)
+Never include real `.env` contents, API keys, passwords, production database URLs, customer information or private deployment logs.
 
-- Fix random seeds (`random_state=42`).
-- Decide the split before modelling. Never tune on the test set.
-- Every number in the report must come from the code and match it.
-- If you use an AI tool, note it for the AI Use Disclosure in the report.
+## Modelling and data changes
 
-## Setup
-
-See the "How to run" section in `README.md`.
+- Preserve chronological evaluation and embargo boundaries for multi-week targets.
+- Avoid future leakage in feature engineering.
+- Compare model changes with the current baseline and report aggregate as well as product-level performance.
+- Document the data period, model artifact version, evaluation split and known limitations.
+- Do not describe demand forecasting as observed stockout prediction unless appropriate stockout labels and validation data are introduced.

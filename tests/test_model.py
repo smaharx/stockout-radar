@@ -1,38 +1,58 @@
-"""Integration tests for the saved Stockout Radar model."""
+"""Reproducible tests for the saved Stockout Radar model."""
 
 import unittest
-from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-from stockout_radar.model import DemandPredictor, PredictionInputError
-from stockout_radar.schema import FEATURE_COLUMNS, PREDICTION_COLUMN
+from stockout_radar.model import (
+    DemandPredictor,
+    PredictionInputError,
+)
+from stockout_radar.schema import (
+    FEATURE_COLUMNS,
+    PREDICTION_COLUMN,
+)
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-MODEL_TABLE_PATH = PROJECT_ROOT / "data" / "processed" / "model_table.csv"
+def make_synthetic_feature_rows(row_count=5):
+    """Create deterministic numeric rows matching the trained model schema."""
+
+    data = {}
+
+    for column_index, column in enumerate(FEATURE_COLUMNS):
+        data[column] = [
+            ((row_index + 1) * (column_index + 1)) / 10.0
+            for row_index in range(row_count)
+        ]
+
+    return pd.DataFrame(
+        data,
+        columns=list(FEATURE_COLUMNS),
+    )
 
 
 class DemandPredictorTests(unittest.TestCase):
 
-    def test_saved_model_predicts_from_existing_model_table(self):
-        self.assertTrue(MODEL_TABLE_PATH.is_file())
-
-        sample = pd.read_csv(
-            MODEL_TABLE_PATH,
-            usecols=list(FEATURE_COLUMNS),
-            nrows=100,
-        )
-
-        sample = sample.dropna(subset=list(FEATURE_COLUMNS)).head(5)
-        self.assertFalse(sample.empty, "No complete sample rows were found.")
+    def test_saved_model_predicts_from_synthetic_feature_rows(self):
+        sample = make_synthetic_feature_rows()
 
         predictor = DemandPredictor()
+
+        self.assertTrue(
+            predictor.model_path.is_file(),
+            "The saved model artifact must be available in CI.",
+        )
+
         predictions = predictor.predict(sample)
 
         self.assertEqual(len(predictions), len(sample))
         self.assertEqual(predictions.name, PREDICTION_COLUMN)
         self.assertTrue(predictions.notna().all())
+
+        self.assertTrue(
+            np.isfinite(predictions.to_numpy(dtype=float)).all()
+        )
 
     def test_missing_features_are_rejected(self):
         predictor = DemandPredictor()
@@ -42,10 +62,16 @@ class DemandPredictorTests(unittest.TestCase):
             predictor.predict(incomplete_input)
 
     def test_non_numeric_feature_values_are_rejected(self):
-        predictor = DemandPredictor()
-        row = {column: 1.0 for column in FEATURE_COLUMNS}
+        row = {
+            column: 1.0
+            for column in FEATURE_COLUMNS
+        }
+
         row["units_lag1"] = "not-a-number"
+
         invalid_input = pd.DataFrame([row])
+
+        predictor = DemandPredictor()
 
         with self.assertRaises(PredictionInputError):
             predictor.predict(invalid_input)

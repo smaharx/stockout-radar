@@ -29,6 +29,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const pageTitle = titleFromPath(pathname);
+  const environmentLabel =
+    process.env.NODE_ENV === "production"
+      ? "Production environment"
+      : "Local environment";
 
   return (
     <div className="app-frame">
@@ -90,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <strong>Stockout Radar</strong>
             <span>Decision support · v1.0</span>
           </div>
-          <span className="footer-status-dot" title="Local workspace" />
+          <span className="footer-status-dot" title={environmentLabel} />
         </div>
       </aside>
 
@@ -109,7 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="topbar-right">
-            <div className="environment-chip"><span className="environment-dot" /> Local environment</div>
+            <div className="environment-chip"><span className="environment-dot" /> {environmentLabel}</div>
             <div className="topbar-divider" />
             <div className="user-avatar" aria-label="Stockout Radar workspace">SR</div>
           </div>
