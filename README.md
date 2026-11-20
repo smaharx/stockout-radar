@@ -107,7 +107,7 @@ See [Architecture](docs/architecture.md), [API reference](docs/api-reference.md)
 | Tests and checks | Pytest, TypeScript, ESLint, Next.js production build |
 | Hosting | Two Vercel projects (frontend and backend) |
 
-The saved model was created with Scikit-learn 1.8.0. Keep the pinned model/runtime versions in `requirements-backend.txt` compatible when loading or retraining the serialized artifact.
+`requirements-backend.txt` pins the numerical/model versions used by the saved artifact. `requirements.txt` includes the core project dependencies. Install `requirements-notebooks.txt` as well when you want to run the Jupyter notebooks.
 
 ## Dataset and preparation
 
@@ -118,6 +118,37 @@ The saved model was created with Scikit-learn 1.8.0. Keep the pinned model/runti
 Raw and processed transaction files, along with the original exploratory notebooks, are not included in this maintained repository version. The trained model artifact and application workflow are included. Rebuilding forecasts requires the prepared `data/processed/weekly_panel.csv` and a compatible model artifact. The documented feature definitions and evaluation methodology are available in [the model card](docs/model-card.md). A clean checkout does not currently provide a complete one-command raw-data-to-model reproduction workflow.
 
 The documented cleaned panel contains 4,675 products and 407,702 product-weeks. The training workflow filters rows that do not have the required lag/rolling history and a complete four-week future target. See [Model card](docs/model-card.md) for the full task definition, split and known limitations.
+
+## Jupyter notebooks
+
+The `notebooks/` directory contains six notebooks in execution order:
+
+| Notebook | Purpose |
+|---|---|
+| `01_cleaning.ipynb` | Load and clean the Online Retail II transactions |
+| `02_aggregation.ipynb` | Build the product-by-week demand panel |
+| `03_eda.ipynb` | Explore weekly demand patterns and product activity |
+| `04_features.ipynb` | Create the 16 forecasting features and four-week target |
+| `05_split_baselines.ipynb` | Create chronological train/validation/test splits and evaluate baselines |
+| `06_models.ipynb` | Compare candidate models, tune and evaluate experiments |
+
+
+### Dataset setup
+
+Download the [Online Retail II dataset from the UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/502/online+retail). Place the downloaded Excel workbook at:
+
+`data/raw/online_retail_II.xlsx`
+
+The notebooks generate processed files under `data/processed/`. These data files are intentionally excluded from Git because of their size. The dataset is licensed separately under CC BY 4.0; see [Licensing and attribution](docs/licensing.md).
+
+### Install notebook dependencies
+
+From the repository root, activate the project's Python environment and run:
+
+```bash
+source .venv/bin/activate
+python -m pip install -r requirements-notebooks.txt
+
 
 ## Forecast definition and feature set
 
@@ -342,6 +373,7 @@ stockout-radar/
 │                                  # licensing, testing and operations
 ├── frontend/                      # Next.js App Router application
 ├── models/                        # Saved model artifacts
+├── notebooks/                     # Data preparation, EDA and model experiments
 ├── reports/
 │   ├── figures/                   # Evaluation visualizations
 │   ├── metrics/                   # Model evaluation results
@@ -362,6 +394,7 @@ stockout-radar/
 ├── SECURITY.md                    # Security policy
 ├── requirements-backend.txt       # Backend dependencies
 ├── requirements-dev.txt           # Development dependencies
+├── requirements-notebooks.txt     # Jupyter notebook dependencies
 └── requirements.txt               # Project dependencies
 ```
 

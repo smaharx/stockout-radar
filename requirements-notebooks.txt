@@ -1,0 +1,9 @@
+# Jupyter notebook environment for Stockout Radar
+# Reuse the model/runtime pins required by the saved HistGradientBoosting artifact.
+-r requirements-backend.txt
+
+# Reading the source Excel workbook and running the exploratory notebooks.
+openpyxl>=3.1,<4
+seaborn>=0.13,<1
+jupyterlab>=4,<5
+ipykernel>=6.29,<7
